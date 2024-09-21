@@ -163,7 +163,7 @@ def submit_one_seq_video(
         H, W, _ = frame.shape
         image, ori_image = process_image(image=frame)
         ori_h, ori_w = ori_image.shape[1], ori_image.shape[2]
-        frame = tensor_list_to_nested_tensor([image[0]]).to(device)
+        frame = tensor_list_to_nested_tensor([image]).to(device)
         detr_outputs = model(frames=frame)
         detr_logits = detr_outputs["pred_logits"]
         detr_scores = torch.max(detr_logits, dim=-1).values.sigmoid()
