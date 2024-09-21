@@ -15,7 +15,7 @@ from utils.box_ops import box_cxcywh_to_xyxy
 from collections import deque
 from structures.instances import Instances
 from structures.ordered_set import OrderedSet
-from log.logger import Logger
+
 from utils.utils import yaml_to_dict, is_distributed, distributed_rank, distributed_world_size
 from models import build_model
 from models.utils import load_checkpoint
@@ -237,7 +237,7 @@ def submit_one_seq_video(
         # Output to tracker file:
         if fake_submit is False:
             # Write the outputs to the tracker file:
-            result_file_path = os.path.join(outputs_dir, "tracker", f"{video_path.split(".")[0]}.txt")
+            result_file_path = os.path.join(outputs_dir,  f"{video_path.split('.')[0]}.txt")
             with open(result_file_path, "a") as file:
                 assert len(id_results) == len(box_results), f"Boxes and IDs should in the same length, " \
                                                             f"but get len(IDs)={len(id_results)} and " \
