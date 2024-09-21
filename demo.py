@@ -148,7 +148,7 @@ def submit_one_seq_video(
     stopframe=1000
     frame_count = 0
     while cap.isOpened():
-        ret, frame = cap.read()
+        ret, ori_frame = cap.read()
         if not ret:
             break
         
@@ -160,8 +160,8 @@ def submit_one_seq_video(
         # stop after frame xxx
         if frame_count > stopframe:
             continue
-        H, W, _ = frame.shape
-        image, ori_image = process_image(image=frame)
+        H, W, _ = ori_frame.shape
+        image, ori_image = process_image(image=ori_frame)
         ori_h, ori_w = ori_image.shape[1], ori_image.shape[2]
         frame = tensor_list_to_nested_tensor([image]).to(device)
         detr_outputs = model(frames=frame)
@@ -181,7 +181,7 @@ def submit_one_seq_video(
         # De-normalize to target image size:
         box_results = detr_det_boxes.cpu() * torch.tensor([ori_w, ori_h, ori_w, ori_h])
         box_results = box_cxcywh_to_xyxy(boxes=box_results)
-
+        trajectory_history = deque(maxlen=max_temporal_length)
         if only_detr is False:
             if len(box_results) > get_model(model).num_id_vocabulary:
                 print(f"[Carefully!] we only support {get_model(model).num_id_vocabulary} ids, "
@@ -249,6 +249,7 @@ def submit_one_seq_video(
                     if not obj_id in object_id_colors:
                         object_id_colors[obj_id] = obj_color
                     x1, y1, x2, y2 = box.tolist()
+                    print(box.tolist())
                     if dataset in ["DanceTrack", "MOT17", "SportsMOT", "MOT17_SPLIT", "MOT15", "MOT15_V2"]:
                         result_line = f"{frame_count}," \
                                       f"{obj_id}," \
@@ -260,10 +261,10 @@ def submit_one_seq_video(
                     y = y1*H
                     w = (x2-x1) * W
                     h = y2-y1 * H
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), object_id_colors[obj_id], 2)
-                    cv2.putText(frame, f'id={obj_id}', (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, object_id_colors[obj_id], 2)
+                    cv2.rectangle(ori_frame, (x, y), (x + w, y + h), object_id_colors[obj_id], 2)
+                    cv2.putText(ori_frame, f'id={obj_id}', (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, object_id_colors[obj_id], 2)
                 
-                out.write(frame)
+                out.write(ori_frame)
     cap.release()                
     if fake_submit:
         print(f"[Fake] Finish >> Submit seq {outputs_dir}. ")
