@@ -24,7 +24,7 @@ import torchvision.transforms.functional as F
 import numpy as np
 import argparse
 from configs.utils import update_config, load_super_config
-
+from tqdm import tqdm
 
 
 
@@ -160,8 +160,9 @@ def submit_one_seq_video(
         # stop after frame xxx
         if frame_count > stopframe:
             continue
-        H, W, _ = ori_frame.shape
+        # H, W, _ = ori_frame.shape
         image, ori_image = process_image(image=ori_frame)
+        H, W, _ = image.shape
         ori_h, ori_w = ori_image.shape[1], ori_image.shape[2]
         frame = tensor_list_to_nested_tensor([image]).to(device)
         detr_outputs = model(frames=frame)
@@ -179,14 +180,18 @@ def submit_one_seq_video(
         detr_det_labels = detr_det_labels[area_legal_idxs]
 
         # De-normalize to target image size:
+        print(detr_det_boxes)
         box_results = detr_det_boxes.cpu() * torch.tensor([ori_w, ori_h, ori_w, ori_h])
+        print(box_results)
         box_results = box_cxcywh_to_xyxy(boxes=box_results)
+        print(box_results)
         trajectory_history = deque(maxlen=max_temporal_length)
         if only_detr is False:
             if len(box_results) > get_model(model).num_id_vocabulary:
                 print(f"[Carefully!] we only support {get_model(model).num_id_vocabulary} ids, "
                       f"but get {len(box_results)} detections in seq {video_path} {frame_count}th frame.")
 
+        print(trajectory_history)
         # Decoding the current objects' IDs
         if only_detr is False:
             assert max_temporal_length - 1 > 0, f"MOTIP need at least T=1 trajectory history, " \
@@ -194,16 +199,19 @@ def submit_one_seq_video(
             current_tracks = Instances(image_size=(0, 0))
             current_tracks.boxes = detr_det_boxes
             current_tracks.outputs = detr_det_outputs
+            print(detr_det_boxes)
             current_tracks.ids = torch.tensor([get_model(model).num_id_vocabulary] * len(current_tracks),
                                               dtype=torch.long, device=current_tracks.outputs.device)
             current_tracks.confs = detr_det_logits.sigmoid()
             trajectory_history.append(current_tracks)
+            print(trajectory_history)
             if len(trajectory_history) == 1:    # first frame, do not need decoding:
                 newborn_filter = (trajectory_history[0].confs > newborn_thresh).reshape(-1, )   # filter by newborn
                 trajectory_history[0] = trajectory_history[0][newborn_filter]
                 box_results = box_results[newborn_filter.cpu()]
                 ids = torch.tensor([current_id + _ for _ in range(len(trajectory_history[-1]))],
                                    dtype=torch.long, device=current_tracks.outputs.device)
+                print(ids)
                 trajectory_history[-1].ids = ids
                 for _ in ids:
                     ids_to_results[_.item()] = current_id
@@ -257,14 +265,15 @@ def submit_one_seq_video(
                     else:
                         raise NotImplementedError(f"Do not know the outputs format of dataset '{dataset}'.")
                     file.write(result_line)
-                    x = x1*W
-                    y = y1*H
-                    w = (x2-x1) * W
-                    h = y2-y1 * H
-                    cv2.rectangle(ori_frame, (x, y), (x + w, y + h), object_id_colors[obj_id], 2)
-                    cv2.putText(ori_frame, f'id={obj_id}', (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, object_id_colors[obj_id], 2)
+                    x = x1
+                    y = y1
+                    w = x2-x1 
+                    h = y2-y1 
+                    cv2.rectangle(image, (x, y), (x + w, y + h), object_id_colors[obj_id], 2)
+                    cv2.putText(image, f'id={obj_id}', (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, object_id_colors[obj_id], 2)
                 
-                out.write(ori_frame)
+        out.write(image)
+        print(frame_count* "=>")
     cap.release()                
     if fake_submit:
         print(f"[Fake] Finish >> Submit seq {outputs_dir}. ")

@@ -4,8 +4,6 @@ SAMPLE_LENGTHS: [1]       # Only sampling one frame for detection
 OUTPUTS_DIR: /content/drive/MyDrive/Object_tracking
 DETR_PRETRAIN: ./pretrains/r50_deformable_detr_coco.pth   # Pretrain from COCO checkpoint
 DETR_NUM_TRAIN_FRAMES: 100                                # >> BS
-INFERENCE_MODEL: /content/drive/MyDrive/r50_deformable_detr_motip_sportsmot_trainval.pth
-VIDEO_PATH: /content/drive/MyDrive/Object_tracking/samples/sample_videos/5.mp4
 
 # Train Setting:
 TRAIN_STAGE: only_detr

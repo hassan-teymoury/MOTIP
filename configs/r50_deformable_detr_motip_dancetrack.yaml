@@ -98,8 +98,7 @@ RESUME_SCHEDULER: True
 RESUME_STATES: True
 
 # Inference:
-INFERENCE_MODEL: /content/drive/MyDrive/r50_deformable_detr_motip_sportsmot_trainval.pth
-VIDEO_PATH: /content/drive/MyDrive/Object_tracking/samples/sample_videos/5.mp4
+
 INFERENCE_ONLY_DETR: False
 INFERENCE_DATASET: DanceTrack
 INFERENCE_SPLIT: val
@@ -114,7 +113,6 @@ NEWBORN_THRESH: 0.6
 AREA_THRESH: 100
 
 # Outputs:
-OUTPUTS_DIR: /content/drive/MyDrive/Object_tracking
 OUTPUTS_PER_STEP: 100
 SAVE_CHECKPOINT_PER_EPOCH: 1
 USE_TENSORBOARD: True
