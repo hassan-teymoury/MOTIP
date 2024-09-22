@@ -271,8 +271,7 @@ def submit_one_seq_video(
                     h = y2-y1 
                     cv2.rectangle(image, (x, y), (x + w, y + h), object_id_colors[obj_id], 2)
                     cv2.putText(image, f'id={obj_id}', (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, object_id_colors[obj_id], 2)
-                
-        out.write(image)
+                    out.write(image)
         print(frame_count* "=>")
     cap.release()                
     if fake_submit:
